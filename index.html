@@ -12,10 +12,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   
   <style>
-    :root {
-      --bg: #0f172a; --bg-secondary: #1e293b; --fg: #f1f5f9; --muted: #94a3b8;
-      --accent: #06b6d4; --card: #1e293b; --border: #334155; --success: #10b981; --danger: #ef4444;
-    }
+    :root { --bg: #0f172a; --bg-secondary: #1e293b; --fg: #f1f5f9; --muted: #94a3b8; --accent: #06b6d4; --card: #1e293b; --border: #334155; --success: #10b981; --danger: #ef4444; }
     body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--fg); margin: 0; min-height: 100vh; }
     .mono { font-family: 'JetBrains Mono', monospace; }
     .grid-bg { position: fixed; inset: 0; background-image: linear-gradient(rgba(6, 182, 212, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(6, 182, 212, 0.03) 1px, transparent 1px); background-size: 50px 50px; pointer-events: none; z-index: 0; }
@@ -156,10 +153,9 @@
 
   <script>
     // ==========================================
-    // KONFIGURASI URL WEB APP
-    // GANTI DENGAN URL ANDA YANG DIDAPAT DARI LANGKAH 1
+    // KONFIGURASI URL - SUDAH DIPASANG
     // ==========================================
-    const API_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYED_ID/exec'; 
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzrjhz_pTKj96f8vmOX6_NXEKrnJRdSAswwjKI48MqUufvtz2CDG-2uZM2TxUAE76iE/exec';
 
     const App = {
       dailyChart: null,
@@ -176,15 +172,7 @@
           btn.addEventListener('click', (e) => this.switchTab(e.target.dataset.tab));
         });
         document.getElementById('report-form').addEventListener('submit', (e) => this.handleFormSubmit(e));
-        
-        // Load awal dengan data demo dulu jika URL belum diset
-        if(API_URL.includes('YOUR_DEPLOYED_ID')) {
-           console.warn("PERINGATAN: URL Web App belum diset. Ganti variabel API_URL dengan URL Anda.");
-           // Anda bisa comment baris di bawah jika tidak ingin load data kosong saat development
-           // this.loadDailyData(); 
-        } else {
-           this.loadDailyData();
-        }
+        this.loadDailyData();
       },
 
       switchTab: function(tabName) {
@@ -196,11 +184,6 @@
       },
 
       apiCall: async function(action, params = {}, method = 'GET') {
-        if(API_URL.includes('YOUR_DEPLOYED_ID')) {
-            alert("Harap set URL Web App di dalam kode JavaScript terlebih dahulu!");
-            return null;
-        }
-
         let url = API_URL;
         let options = { method: method, mode: 'cors' };
 
@@ -208,33 +191,27 @@
             const queryString = new URLSearchParams(params).toString();
             url += `?${queryString}`;
         } else {
-            // Untuk POST, kita perlu wrap body sebagai string
             options.body = JSON.stringify(params);
-            // Apps Script Web App seringkali memerlukan redirect manual untuk POST jika menggunakan ContentService
-            // Namun dengan method 'cors' dan deployed modern, ini biasanya aman.
         }
 
         try {
             const response = await fetch(url, options);
             const text = await response.text();
-            // Coba parse JSON, kadang Apps Script mengembalikan error HTML jika redirect
             try {
                 return JSON.parse(text);
             } catch (e) {
-                // Jika bukan JSON, mungkin error atau string biasa
                 console.error("Response bukan JSON:", text);
-                return { status: 'error', message: 'Respons server tidak valid (mungkin error redirect atau CORS).' };
+                return { status: 'error', message: 'Respons server tidak valid.' };
             }
         } catch (error) {
             console.error("Network Error:", error);
-            return { status: 'error', message: 'Gagal menghubungi server. Cek koneksi atau URL.' };
+            return { status: 'error', message: 'Gagal menghubungi server.' };
         }
       },
 
       loadDailyData: async function() {
         const dateStr = document.getElementById('filter-date').value;
         document.getElementById('daily-table-mini').innerHTML = '<tr><td colspan="5" class="text-center p-4 text-slate-400">Memuat...</td></tr>';
-        
         const data = await this.apiCall('getDaily', { date: dateStr });
         if (data) this.renderDailyDashboard(data);
       },
@@ -263,8 +240,7 @@
           ktV: document.getElementById('f-ktv').value
         };
 
-        // Gunakan POST
-        const result = await this.apiCall('save', payload, 'POST'); // 'save' tidak dipakai di backend, hanya trigger doPost
+        const result = await this.apiCall('save', payload, 'POST');
         
         if (result && result.status === 'success') {
             alert(result.message);
@@ -275,10 +251,6 @@
             alert("Terjadi kesalahan: " + (result ? result.message : "Unknown error"));
         }
       },
-      
-      // Sisa kode (renderDailyDashboard, updateChart, loadReportData, dll) sama seperti sebelumnya
-      // ... [Salin sisa fungsi dari kode sebelumnya: renderDailyDashboard, updateDailyChart, loadReportData, renderReportTable, dll] ...
-      // Untuk memudahkan, saya sertakan kembali fungsi-fungsi render di bawah ini:
 
       renderDailyDashboard: function(data) {
         let counters = { tindakan: 0, ak1: 0, bicarb: 0, alertHb: 0, jkn: 0, swasta: 0, av: 0, dlp: 0, dlt: 0, manual: 0, inap: 0 };
